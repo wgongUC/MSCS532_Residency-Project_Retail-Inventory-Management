@@ -43,9 +43,3 @@ Watch the numbered headings. At each heading ask: **Which index changed and why?
 - Call `inv.sell('103', 100000)` to see the oversell rejection.
 - Add a product with 0 units; check that a sale fails but lookup succeeds.
 - Run `python3 -m unittest -v` and read each test name as a behavior contract.
-
-## Consult Group 5 (three questions)
-
-1. What was your overall architectural vision for the system, especially the decision to use an AVL tree rather than a regular binary search tree?
-2. Should the Monday midnight weekly-sales reset occur automatically, on the next request, or through an explicit command?
-3. For operations affecting the dictionary, AVL tree, and heap, is pre-validation sufficient for the PoC, or do you expect rollback on an intermediate failure?
