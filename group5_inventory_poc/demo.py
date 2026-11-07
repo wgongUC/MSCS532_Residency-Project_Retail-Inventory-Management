@@ -49,8 +49,12 @@ def main():
         show('11. OVERSALE REJECTED; NO STATE CHANGE', str(exc))
     inv.validate()
     print('\n12. INTEGRITY CHECK: PASS (hash = heap = AVL)')
+    show('13. PHASE 3 CURVEBALL: top_k_bestsellers(3), read-only heap walk',
+         [(p['sku'], p['name'], p['weekly_sold']) for p in inv.top_k_bestsellers(3)])
+    show('14. HEAP ARRAY UNCHANGED BY THE TOP-K QUERY',
+         [(p.sku, p.weekly_sold, p.heap_index) for p in inv.heap.items])
     inv.reset_week()
-    show('13. WEEKLY RESET: NO BESTSELLER UNTIL NEXT SALE', inv.bestseller())
+    show('15. WEEKLY RESET: NO BESTSELLER UNTIL NEXT SALE', inv.bestseller())
     inv.validate()
     print('\nALL DEMONSTRATION STEPS COMPLETED.')
 

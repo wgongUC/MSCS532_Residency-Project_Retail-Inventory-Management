@@ -1,0 +1,34 @@
+workload: 50,000 products, 500,000 mixed operations
+  price_range     24,820 ops    5.020 s    202.25 µs/op
+  sell           249,571 ops    3.553 s     14.24 µs/op
+  change_price    24,972 ops    1.423 s     56.97 µs/op
+  get            100,434 ops    0.744 s      7.40 µs/op
+  add             12,619 ops    0.537 s     42.54 µs/op
+  delete          12,459 ops    0.413 s     33.11 µs/op
+  bestseller      49,923 ops    0.317 s      6.35 µs/op
+  restock         25,202 ops    0.229 s      9.08 µs/op
+  TOTAL (wall, incl. initial load)      14.782 s
+checksum: a46b80a767e7787e
+         23809710 function calls (21925159 primitive calls) in 14.746 seconds
+
+   Ordered by: internal time
+   List reduced from 87 to 14 due to restriction <14>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  1489850    1.682    0.000    2.138    0.000 avl_tree.py:135(between)
+    24820    1.493    0.000    4.470    0.000 inventory.py:125(price_range)
+        1    1.130    1.130   14.759   14.759 profile_run.py:78(run)
+1409137/87591    1.123    0.000    1.839    0.000 avl_tree.py:69(_insert)
+  1990210    0.971    0.000    0.971    0.000 product.py:14(public)
+   550000    0.761    0.000    1.823    0.000 inventory.py:22(_maybe_roll_week)
+  1884551    0.680    0.000    0.945    0.000 avl_tree.py:42(_balance)
+600436/37431    0.546    0.000    0.802    0.000 avl_tree.py:87(_remove)
+   249571    0.516    0.000    3.298    0.000 inventory.py:85(sell)
+   550001    0.496    0.000    0.592    0.000 inventory.py:18(_monday)
+   323347    0.467    0.000    1.279    0.000 max_heap.py:31(_sift)
+   412638    0.371    0.000    0.577    0.000 inventory.py:41(_existing)
+   323347    0.363    0.000    0.577    0.000 max_heap.py:20(_down)
+  2216131    0.357    0.000    0.357    0.000 {method 'append' of 'list' objects}
+
+
+

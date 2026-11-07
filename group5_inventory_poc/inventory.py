@@ -1,4 +1,5 @@
 """Group 5 retail inventory PoC. All times use the configured store time zone."""
+import time
 from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 from product import Product
@@ -14,12 +15,35 @@ class Inventory:
         self.capacity = capacity
         self.timezone = ZoneInfo(store_timezone)
         self.week_start = self._monday(datetime.now(self.timezone).date())
+        self._roll_for: date | None = None   # week_start the cached instant belongs to
+        self._roll_at = 0.0                  # PERF fix 3 cache: next rollover, epoch seconds
 
     @staticmethod
     def _monday(d: date) -> date:
         return d - timedelta(days=d.weekday())
 
+    def _next_roll_epoch(self) -> float:
+        """Epoch seconds of the first store-local Monday 00:00 after week_start.
+
+        _maybe_roll_week rolls exactly when _monday(today) > week_start, i.e.
+        on or after that Monday, so before this instant no rollover can happen.
+        """
+        nxt = self.week_start + timedelta(days=7 - self.week_start.weekday())
+        return datetime(nxt.year, nxt.month, nxt.day, tzinfo=self.timezone).timestamp()
+
     def _maybe_roll_week(self, now: datetime | None = None) -> None:
+        # PERF fix 3: this check runs before EVERY public operation. The
+        # original built a timezone-aware datetime.now(), converted it and
+        # computed a Monday each time. Instead, cache the instant the next week
+        # starts (recomputed whenever week_start changes) and compare it with
+        # the cheap time.time(). An explicit `now` (used by tests), or reaching
+        # that instant, falls through to the original logic unchanged.
+        if now is None:
+            if self._roll_for != self.week_start:
+                self._roll_for = self.week_start
+                self._roll_at = self._next_roll_epoch()
+            if time.time() < self._roll_at:
+                return
         now = now or datetime.now(self.timezone)
         if now.tzinfo is None:
             raise ValueError('now must have timezone information')
@@ -117,6 +141,23 @@ class Inventory:
         self._maybe_roll_week()
         winner = self.heap.top()
         return winner.public() if winner is not None else None
+
+    def top_k_bestsellers(self, k: int) -> list[dict]:
+        """Phase 3 curveball: the k top weekly sellers, best first.
+
+        Ties: SKU ascending (same rule as bestseller()). Only products with
+        weekly sales > 0 are listed, matching bestseller() returning None when
+        nothing has sold. If fewer than k products have sold, all of them are
+        returned. k = 0 returns [].
+
+        Read-only: the heap is walked, never popped or reordered, so the system
+        state is unchanged. (The usual lazy week check still runs first, exactly
+        as in bestseller(); without it, a query on Monday would report last
+        week's sales.)  Cost: O(k log k) after that check, independent of n.
+        """
+        self._maybe_roll_week()
+        self._int(k, 'k')
+        return [p.public() for p in self.heap.top_k(k)]
 
     def sorted_by_price(self) -> list[dict]:
         self._maybe_roll_week()

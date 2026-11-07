@@ -40,8 +40,19 @@ def _left(x: Node) -> Node:
 
 
 def _balance(n: Node) -> Node:
-    _refresh(n)
-    diff = _height(n.left) - _height(n.right)
+    # PERF fix 2: this runs on every node of every insert/remove path.
+    # The original called _refresh() (which calls _height() twice and max())
+    # and then _height() twice more: about 6 function calls per node. Read each
+    # child height once, inline, and leave right away in the common case
+    # where the node is still balanced. Rotations below are unchanged, so the
+    # resulting tree is identical.
+    left, right = n.left, n.right
+    lh = left.height if left is not None else 0
+    rh = right.height if right is not None else 0
+    n.height = (lh if lh > rh else rh) + 1
+    diff = lh - rh
+    if -1 <= diff <= 1:
+        return n
     if diff > 1:
         assert n.left
         if _height(n.left.left) < _height(n.left.right):
@@ -101,27 +112,43 @@ class AVLPriceTree:
     def remove(self, key: Key) -> None:
         self.root = _remove(self.root, key)
 
+    # PERF fix 1: iterative traversals.
+    # The original versions were recursive generators chained with
+    # "yield from". Each yielded key then travels back up through EVERY
+    # ancestor generator frame (about log n of them), and a generator is
+    # created even for empty children. That made a range query cost
+    # O(k log n) in practice, not O(log n + k). One explicit stack and one
+    # generator frame give real O(log n + k), with the same visit order and
+    # the same output.
+
     def sorted_keys(self) -> Iterator[Key]:
-        def walk(n: Node | None) -> Iterator[Key]:
-            if n:
-                yield from walk(n.left)
-                yield n.key
-                yield from walk(n.right)
-        return walk(self.root)
+        stack: list[Node] = []
+        n = self.root
+        while stack or n is not None:
+            while n is not None:          # go as far left as possible
+                stack.append(n)
+                n = n.left
+            n = stack.pop()
+            yield n.key
+            n = n.right
 
     def between(self, low: int, high: int) -> Iterator[Key]:
         """Pruned in-order traversal: O(log n + k) on AVL tree."""
-        def walk(n: Node | None) -> Iterator[Key]:
-            if n is None:
-                return
-            price = n.key[0]
-            if price >= low:
-                yield from walk(n.left)
-            if low <= price <= high:
-                yield n.key
-            if price <= high:
-                yield from walk(n.right)
-        return walk(self.root)
+        stack: list[Node] = []
+        n = self.root
+        while stack or n is not None:
+            if n is not None:
+                if n.key[0] < low:
+                    n = n.right           # node and its left subtree are below the range
+                else:
+                    stack.append(n)       # may be in range: visit left side first
+                    n = n.left
+                continue
+            n = stack.pop()
+            if n.key[0] > high:
+                return                    # every later key is larger: stop
+            yield n.key
+            n = n.right
 
     def validate(self) -> None:
         def visit(n: Node | None, lo: Key | None, hi: Key | None) -> int:

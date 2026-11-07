@@ -25,6 +25,8 @@ Implements the inherited Phase 1 design: a **Python dictionary** (hash table) fo
    python3 -m unittest -v
    ```
 
+   **Phase 3:** `python3 profile_run.py --profile` (cProfile), `python3 compare.py` (timeit before vs after at 3 sizes), `python3 bench_top_k.py` (top-k benchmark). See `PERFORMANCE.md`.
+
 5. Try your own example in the interactive Python interpreter:
 
    ```bash
@@ -55,8 +57,18 @@ No external libraries or installation needed. If `python3` is missing, install P
 | `inventory.py` | Inventory API and cross-index coordination |
 | `max_heap.py` | Custom indexed max-heap, SKU ascending on sales ties |
 | `avl_tree.py` | Custom balanced BST with rotations and range pruning |
-| `demo.py` | 13 labeled steps with before/after effects |
+| `demo.py` | 15 labeled steps with before/after effects (13–14 show top-k) |
 | `test_inventory.py` | 9 unit tests, including 1,500 randomized operations with invariant checks |
+| `test_top_k.py` | Phase 3: 11 tests for `top_k_bestsellers(k)`, including brute-force and heap-unchanged checks |
+| `profile_run.py` | Phase 3: profiling harness (50k SKUs, 500k mixed operations, checksum) |
+| `bench_top_k.py` | Phase 3: top-k benchmark against sort, nsmallest and copy-and-pop |
+| `compare.py` | Phase 3: timeit before/after (original vs optimized) at 10k/50k/200k, checks identical answers; `--dataset file.csv` |
+| `function_times.py` | Phase 3: per-operation and per-function times, before vs after (cProfile) |
+| `timeit_bench.py` | Phase 3: timeit per-operation benchmark used by compare.py |
+| `original_phase2/` | Phase 3: frozen copy of the inherited code, used as the "before" in compare.py |
+| `Optimization_Notes.docx` | Phase 3: 1–2 page optimization notes with AI Usage Appendix |
+| `PROGRESS_LOG.txt` | Phase 3: simple step-by-step log |
+| `PERFORMANCE.md` | Phase 3: baseline, the three fixes, curveball, results and talk outline |
 | `IMPLEMENTATION_NOTES.md` | Phase 3 handoff and AI appendix |
 | `WALKTHROUGH.md` | Study guide and instructor-style questions |
 
@@ -70,6 +82,7 @@ No external libraries or installation needed. If `python3` is missing, install P
 | Update price | `change_price(sku, cents)` | expected O(log n) (AVL removal + insertion) |
 | Restock/rename | `restock(...)`, `rename(...)` | expected O(1) |
 | Get bestseller | `bestseller()` | O(1) once week rollover check is complete |
+| Top k bestsellers (Phase 3) | `top_k_bestsellers(k)` | O(k log k), read-only walk of the heap |
 | Price-range query | `price_range(low, high)` | O(log n + k) |
 | Full sorted listing | `sorted_by_price()` | O(n) |
 | Reset weekly counts | `reset_week()` | O(n) bottom-up heapify |

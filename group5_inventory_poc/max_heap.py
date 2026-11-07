@@ -1,4 +1,6 @@
 """Indexed binary max-heap: most sales first; SKU ascending breaks ties."""
+import heapq
+
 from product import Product
 
 
@@ -59,6 +61,42 @@ class IndexedMaxHeap:
     def top(self) -> Product | None:
         """Bestseller this week, or None when nothing has sold."""
         return self.items[0] if self.items and self.items[0].weekly_sold else None
+
+    def top_k(self, k: int) -> list[Product]:
+        """The k highest-ranked products with sales > 0, best first. Read-only.
+
+        Phase 3 curveball. The root is #1 in O(1); #2..#k are found WITHOUT
+        popping (which would destroy the heap) and without copying it (O(n)).
+
+        Idea: in a max-heap every child ranks below its parent, so the next
+        best item is always a child of something already reported. Keep a
+        small auxiliary min-heap (the "frontier") of candidate positions,
+        ordered by the same rank key (-weekly_sold, sku):
+            start with the root; repeat k times:
+                pop the best candidate, report it, push its two children.
+        The frontier grows by at most one per step (pop 1, push <= 2), so each
+        step is O(log k): O(k log k) in total, independent of n.
+        self.items and every heap_index are never written to.
+        """
+        items = self.items
+        n = len(items)
+        out: list[Product] = []
+        if k <= 0 or n == 0 or items[0].weekly_sold == 0:
+            return out
+        root = items[0]
+        # (-sold, sku) reproduces the heap's own order: more sales first, SKU
+        # ascending on ties. SKUs are unique, so position i is never compared.
+        frontier = [(-root.weekly_sold, root.sku, 0)]
+        while frontier and len(out) < k:
+            neg_sold, _, i = heapq.heappop(frontier)
+            if neg_sold == 0:
+                break  # nothing that has sold remains: everything left is 0
+            out.append(items[i])
+            for c in (2 * i + 1, 2 * i + 2):
+                if c < n:
+                    p = items[c]
+                    heapq.heappush(frontier, (-p.weekly_sold, p.sku, c))
+        return out
 
     def rebuild(self) -> None:
         """Bottom-up heapify: O(n)."""

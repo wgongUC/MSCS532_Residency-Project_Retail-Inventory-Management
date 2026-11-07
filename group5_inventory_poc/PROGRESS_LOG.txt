@@ -1,0 +1,93 @@
+PHASE 3 PROGRESS LOG (simple version)
+Group 5 Retail Inventory System, MSCS 532, November 7, 2026
+==============================================================
+
+THE GOAL
+  Make the inherited code faster without changing its answers, and add
+  the curveball operation top_k_bestsellers(k).
+
+
+STEP 1  Check the inherited code works
+  Ran the 9 original tests and the demo. Everything passed.
+  Saved the untouched code in git (tag: inherited).
+
+
+STEP 2  Measure first (baseline)
+  profile_run.py creates a fake but realistic store in memory:
+  50,000 products and 500,000 operations (sales, lookups, price
+  searches...). It times everything and prints a "checksum" of all
+  the answers. If the checksum stays the same, the answers did not change.
+
+  Baseline:  6.2 seconds on our test machine (4.85 s on a team member's Mac)
+  Checksum:  a46b80a767e7787e
+
+  cProfile showed the three slowest parts:
+    1. Price-range search: 25 million calls for only 25,000 searches.
+    2. Tree balancing: about 12 million tiny helper calls.
+    3. The "is it a new week?" check: run 550,000 times.
+
+
+STEP 3  Fix 1: price-range search            (file: avl_tree.py)
+  Problem:  the search was written as generators nested inside each
+            other, so every result was passed up about 17 levels.
+  Fix:      rewrote it as one simple loop.
+  Result:   price searches about 31% faster. Same answers.     (tag: fix1)
+
+
+STEP 4  Fix 2: tree balancing                (file: avl_tree.py)
+  Problem:  about 6 small function calls per tree node just to read
+            two numbers.
+  Fix:      read the numbers directly; stop early if already balanced.
+  Result:   price changes about 22% faster. Same trees, same answers.
+  Lesson:   the profiler made this look bigger than it really was.  (tag: fix2)
+
+
+STEP 5  Fix 3: new-week check                (file: inventory.py)
+  Problem:  every operation asked the clock "is it a new week?", but the
+            answer only changes once a week.
+  Fix:      work out once when next Monday at midnight is, then just
+            compare against it.
+  Result:   lookups about 42% faster, sales about 24% faster.   (tag: fix3)
+
+
+STEP 6  Stop optimizing
+  Total time: 6.2 s  ->  about 4.6 s  (about 25% faster).
+  What is left is mostly required work, so we stopped there.
+
+
+STEP 7  Curveball: top_k_bestsellers(k)    (files: max_heap.py, inventory.py)
+  Task:     return the top k sellers in order (ties by SKU), without
+            breaking the heap.
+  Idea:     in a heap, the next-best item is always a child of an item
+            already picked. So start at the top and follow children,
+            using a small helper list. The real heap is only read.
+  Result:   about 7 microseconds per query, whether the store has 10,000
+            or 200,000 products. The obvious alternatives take 1 to 18
+            milliseconds and get slower as the store grows.
+  Tests:    11 new tests (test_top_k.py). All 20 tests pass.  (tag: topk)
+
+
+STEP 8  timeit before/after at growing sizes   (compare.py)
+  The untouched original code is kept in original_phase2/.
+  compare.py times the ORIGINAL and OPTIMIZED versions on the same data
+  at 10,000 / 50,000 / 200,000 products, and checks the answers match.
+  Every operation is faster at every size; answers are identical.
+  (Bug in our own benchmark found and fixed: the price-change test was
+   repeating changes that did nothing, which made "before" look faster.)
+
+
+STEP 9  Write-up
+  Optimization_Notes.docx  the 1-2 page notes with AI Usage Appendix
+  PERFORMANCE.md           results and presentation outline
+  Final version frozen with git tag: deliverable3
+
+
+HOW TO RUN (inside group5_inventory_poc)
+  python3 -m unittest -v          all 20 tests
+  python3 profile_run.py          timing + checksum
+  python3 profile_run.py --profile | head -30     cProfile view
+  python3 function_times.py       time of EACH operation and function, before vs after (~1 min)
+  python3 compare.py              before vs after, 3 sizes (~1 minute)
+  python3 compare.py --sizes 10000 50000          faster version
+  python3 bench_top_k.py --quick  curveball benchmark
+  python3 compare.py --dataset FILE.csv --sizes 1000 10000   instructor data

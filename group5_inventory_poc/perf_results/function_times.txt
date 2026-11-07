@@ -1,0 +1,46 @@
+
+Answers identical (checksum): YES  (fc5680337a81eac5)
+
+TABLE 1: Time per operation type, wall clock, no profiler
+  operation         calls  before (s)  after (s)  before µs  after µs   change
+  sell             50,035       0.154      0.111       3.09      2.22     -28%
+  price_range       5,194       0.096      0.056      18.44     10.85     -41%
+  change_price      5,053       0.092      0.062      18.18     12.35     -32%
+  get              19,962       0.034      0.017       1.70      0.83     -51%
+  add               2,519       0.030      0.021      11.86      8.38     -29%
+  delete            2,472       0.026      0.017      10.37      6.88     -34%
+  bestseller        9,788       0.016      0.007       1.62      0.76     -53%
+  restock           4,977       0.010      0.006       2.05      1.17     -43%
+  ALL                           0.458      0.298                          -35%
+
+TABLE 2: Time inside each function (cProfile tottime; profiler overhead inflates all numbers)
+  function                            calls before  calls after  before (s)  after (s)
+  avl_tree.py: _refresh                    346,645       27,710       0.187      0.017
+  avl_tree.py: _balance                    318,935      318,935       0.183      0.084
+  avl_tree.py: walk                        965,583       (none)       0.182      0.000
+  avl_tree.py: _insert                     241,064      241,064       0.133      0.121
+  avl_tree.py: _height                   1,349,770       74,030       0.106      0.008
+  inventory.py: _maybe_roll_week           110,000      110,000       0.106      0.030
+  inventory.py: _monday                    110,001            1       0.078      0.000
+  inventory.py: sell                        50,035       50,035       0.068      0.062
+  avl_tree.py: _remove                     102,968      102,968       0.057      0.053
+  product.py: public                       165,976      165,976       0.053      0.051
+  max_heap.py: _sift                        64,684       64,684       0.051      0.045
+  avl_tree.py: between                       5,194       66,364       0.002      0.046
+  max_heap.py: _down                        64,684       64,684       0.045      0.044
+  inventory.py: add                         12,519       12,519       0.041      0.039
+  max_heap.py: _higher                     168,871      168,871       0.040      0.039
+  inventory.py: _int                        95,491       95,491       0.038      0.036
+  inventory.py: price_range                  5,194        5,194       0.031      0.035
+  inventory.py: _existing                   82,499       82,499       0.032      0.028
+  inventory.py: _sku                        95,018       95,018       0.024      0.022
+  max_heap.py: updated                      50,035       50,035       0.017      0.015
+  inventory.py: get                         19,962       19,962       0.014      0.013
+  inventory.py: change_price                 5,053        5,053       0.009      0.008
+  max_heap.py: add                          12,519       12,519       0.008      0.008
+  inventory.py: bestseller                   9,788        9,788       0.008      0.007
+  inventory.py: restock                      4,977        4,977       0.006      0.005
+  max_heap.py: _swap                        21,749       21,749       0.005      0.005
+  avl_tree.py: insert                       17,572       17,572       0.005      0.005
+
+(none) = the function does not exist in that version, or is no longer called.
