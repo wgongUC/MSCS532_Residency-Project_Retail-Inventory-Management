@@ -91,3 +91,18 @@ No external libraries or installation needed. If `python3` is missing, install P
 The Phase 1 brief did **not** specify the weekly reset trigger. This PoC uses **lazy rollover on the first request after Monday midnight** plus a manual `reset_week()` function. It is single-process and in-memory, with no persistence, threading, payments, or sales history. Validation occurs before ordinary mutations; **rollback on arbitrary internal failures is not implemented**. These are important choices to confirm with Group 5 and to tell Phase 3.
 
 Run `python3 demo.py` first, then `python3 -m unittest -v`, then examine `inventory.py` for orchestration, `max_heap.py` for index maintenance, and `avl_tree.py` for rotations.
+
+### Future Enhancement: Persistent Data Storage
+
+The current Phase 2 implementation stores inventory data in memory. Data is lost when the application terminates.
+
+For future development, we propose using **SQLite** to provide persistent storage.
+
+1. **Save:** Store SKU, name, stock, price, weekly sales, and week-start date in the database.
+2. **Load:** On application startup, load product records into the hash table and reconstruct the max-heap and AVL tree.
+3. **Update:** Persist inventory changes, including additions, sales, restocking, price changes, and deletions.
+4. **Consistency:** Use database transactions to maintain reliable updates.
+
+The `heap_index` and AVL tree structure do not need to be stored because both can be reconstructed from the product records.
+
+**Implementation status:** Proposed future enhancement; not implemented in Phase 2.
