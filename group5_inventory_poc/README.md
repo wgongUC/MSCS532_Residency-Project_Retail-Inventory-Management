@@ -106,3 +106,6 @@ For future development, we propose using **SQLite** to provide persistent storag
 The `heap_index` and AVL tree structure do not need to be stored because both can be reconstructed from the product records.
 
 **Implementation status:** Proposed future enhancement; not implemented in Phase 2.
+
+Team Mate: Phase 2 Group 5
+Charles Ssekitto, Muhtadin Mushfiq, Rachana Peddi, Sanya Kamra,
